@@ -1,0 +1,45 @@
+# --- Python Environment ---
+venv/
+.venv/
+env/
+bin/
+lib/
+include/
+build/
+dist/
+*.egg-info/
+requirements.txt
+
+# --- Byte-compiled / optimized / DLL files ---
+__pycache__/
+*.py[cod]
+*$py.class
+
+# --- Secret / Configuration ---
+.env
+auth_key.json
+*.pem
+
+# --- Database ---
+# (Ignore local SQLite or DB dumps)
+*.db
+*.sqlite3
+mysql_dump.sql
+
+# --- IDEs & Editors ---
+.vscode/
+.idea/
+*.swp
+*.swo
+.project
+.pydevproject
+.settings/
+
+# --- System Files ---
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# --- Logs ---
+*.log
+logs/
