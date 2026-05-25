@@ -8,7 +8,7 @@ class LeaveTypeCreate(BaseModel):
     active: bool
     DaysAllowed: int
     
-class LeaveTypeResponse(BaseModel):
+class LeaveTypeResponse(BaseSchema):
     id : int
     name: str 
     active: bool 

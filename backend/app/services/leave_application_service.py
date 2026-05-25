@@ -54,25 +54,21 @@ class LeaveApplicationService:
         return new_app
 
     def process_approval(self, db: Session, application_id: int, manager_id: int, approved: bool, comment: str = None):
-        """
-        Logic for a manager to Approve or Reject a request.
-        Includes the required database transaction for balance deduction.
-        """
-        # 1. Fetch application
+        # Fetch application
         app = db.query(LeaveApplication).filter(LeaveApplication.id == application_id).first()
         if not app:
             raise HTTPException(status_code=404, detail="Application not found")
         
-        # 2. Requirement: Manager verification
+        # Requirement: Manager verification
         employee = db.query(User).filter(User.id == app.employee_id).first()
         if employee.manager_id != manager_id:
             raise HTTPException(status_code=403, detail="You are not authorized to manage this employee's leave")
 
-        # 3. Requirement: Ensure it hasn't been processed already
+        # Requirement: Ensure it hasn't been processed already
         if app.status != LeaveStatus.pending:
             raise HTTPException(status_code=400, detail="This application has already been processed")
 
-        # 4. DATABASE TRANSACTION
+        # DATABASE TRANSACTION
         try:
             if approved:
                 app.status = LeaveStatus.approved
@@ -99,9 +95,7 @@ class LeaveApplicationService:
             raise HTTPException(status_code=500, detail="An error occurred during the transaction")
 
     def cancel_application(self, db: Session, application_id: int, employee_id: int):
-        """
-        Logic for an employee to cancel their own pending request.
-        """
+
         app = db.query(LeaveApplication).filter(
             LeaveApplication.id == application_id, 
             LeaveApplication.employee_id == employee_id

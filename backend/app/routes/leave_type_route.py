@@ -13,7 +13,7 @@ from app.services.leave_type_service import LeaveTypeService
 
 router = APIRouter(prefix="/leave-types", tags=["Leave Types"])
 
-# Service Dependency (Since we removed @staticmethod)
+# Service Dependency 
 def get_leave_type_service():
     return LeaveTypeService()
 
@@ -24,9 +24,6 @@ def list_leave_types(
     current_user: User = Depends(get_current_user),
     service: LeaveTypeService = Depends(get_leave_type_service)
 ):
-    """
-    List all active leave types (Accessible by all logged-in users).
-    """
     return service.get_all_active(db)
 
 
@@ -38,9 +35,7 @@ def create_leave_type(
     current_user: User = Depends(get_current_user),
     service: LeaveTypeService = Depends(get_leave_type_service)
 ):
-    """
-    Create a leave type (HR admin only).
-    """
+    
     # Authorization Check
     if current_user.role != UserRole.HR:
         raise HTTPException(

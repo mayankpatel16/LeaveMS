@@ -18,6 +18,7 @@ class LeaveApplicationResponse(BaseModel):
     leave_type_id: int
     start_date: str  
     end_date: str  
+    working_days: int
     reason: str | None  
     status: LeaveStatus
     manager_comments: str | None  

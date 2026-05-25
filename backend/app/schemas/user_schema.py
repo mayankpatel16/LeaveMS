@@ -9,6 +9,8 @@ class UserCreate(BaseModel):
     email: EmailStr
     password: str
     role: UserRole
+    manager_id: int | None = None
+    
     @field_validator('role', mode='before')
     @classmethod
     def validate_role(cls, value):
@@ -17,8 +19,6 @@ class UserCreate(BaseModel):
             mapping = {"manager": "Manager", "employee": "Employee", "hr": "HR"}
             return mapping.get(value.lower(), value)
         return value
-    
-    manager_id: int | None
     
 class UserResponse(BaseModel):
     id: int

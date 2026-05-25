@@ -17,6 +17,7 @@ class LeaveApplication(Base):
     leave_type_id = Column(Integer, ForeignKey('LeaveTypes.id'), nullable=False)
     start_date = Column(Date, nullable=False)
     end_date = Column(Date, nullable=False)
+    working_days = Column(Integer, nullable=False)
     reason = Column(String(255), nullable=False)
     status = Column(Enum(LeaveStatus), default=LeaveStatus.PENDING, nullable=False)
     manager_comments = Column(String(255), nullable=True)

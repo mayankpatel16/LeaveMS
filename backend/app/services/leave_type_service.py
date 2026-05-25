@@ -8,7 +8,7 @@ class LeaveTypeService:
         db_type = LeaveType(
             name=data.name,
             active=data.active,
-            days_allowed=data.DaysAllowed  # Matches your schema naming
+            DaysAllowed=data.DaysAllowed
         )
         db.add(db_type)
         db.commit()
