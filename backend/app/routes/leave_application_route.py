@@ -38,7 +38,7 @@ def get_applications(
     current_user: User = Depends(get_current_user)
 ):
     # Manager View: See pending requests from direct reports
-    if current_user.role == UserRole.manager:
+    if current_user.role == UserRole.MANAGER:
         return db.query(LeaveApplication).join(User, LeaveApplication.employee_id == User.id).filter(
             User.manager_id == current_user.id,
             LeaveApplication.status == LeaveStatus.pending
@@ -55,7 +55,7 @@ def approve_leave(
     current_user: User = Depends(get_current_user),
     service: LeaveApplicationService = Depends(get_leave_service) # Injected here
 ):
-    if current_user.role != UserRole.manager:
+    if current_user.role != UserRole.MANAGER:
         raise HTTPException(status_code=403, detail="Only managers can approve leave")
     
     return service.process_approval(
@@ -74,7 +74,7 @@ def reject_leave(
     current_user: User = Depends(get_current_user),
     service: LeaveApplicationService = Depends(get_leave_service) # Injected here
 ):
-    if current_user.role != UserRole.manager:
+    if current_user.role != UserRole.MANAGER:
         raise HTTPException(status_code=403, detail="Only managers can reject leave")
     
     return service.process_approval(
