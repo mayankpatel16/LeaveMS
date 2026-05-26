@@ -16,7 +16,7 @@ app.include_router(leave_application_route.router)
 app.include_router(leave_type_route.router)
 app.include_router(leave_application_route.router)
 app.include_router(leave_balance_route.router)
-# app.include_router(calender_route.router)
+app.include_router(calender_route.router)
 
 @app.get("/")
 def read_root():
