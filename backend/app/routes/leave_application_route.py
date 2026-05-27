@@ -35,17 +35,20 @@ def apply_for_leave(
 @router.get("/", response_model=List[LeaveApplicationResponse])
 def get_applications(
     db: Session = Depends(get_db), 
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
+    service: LeaveApplicationService = Depends(get_leave_service)
 ):
     # Manager View: See pending requests from direct reports
     if current_user.role == UserRole.MANAGER:
-        return db.query(LeaveApplication).join(User, LeaveApplication.employee_id == User.id).filter(
+        applications = db.query(LeaveApplication).join(User, LeaveApplication.employee_id == User.id).filter(
             User.manager_id == current_user.id,
-            LeaveApplication.status == LeaveStatus.pending
+            LeaveApplication.status == LeaveStatus.PENDING
         ).all()
+        return [service.with_display_names(application) for application in applications]
     
     # Employee View: See all own leave history
-    return db.query(LeaveApplication).filter(LeaveApplication.employee_id == current_user.id).all()
+    applications = db.query(LeaveApplication).filter(LeaveApplication.employee_id == current_user.id).all()
+    return [service.with_display_names(application) for application in applications]
 
 # 3. APPROVE APPLICATION (Manager Only)
 @router.put("/{id}/approve", response_model=LeaveApplicationResponse)
@@ -100,10 +103,10 @@ def cancel_leave(
     if not application:
         raise HTTPException(status_code=404, detail="Leave application not found")
     
-    if application.status != LeaveStatus.pending:
+    if application.status != LeaveStatus.PENDING:
         raise HTTPException(status_code=400, detail="Only pending applications can be cancelled")
 
-    application.status = LeaveStatus.cancelled
+    application.status = LeaveStatus.CANCELLED
     db.commit()
     db.refresh(application)
-    return application
+    return get_leave_service().with_display_names(application)

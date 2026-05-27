@@ -16,8 +16,9 @@ class User(Base):
     email = Column(String(120), unique=True, nullable=False, index=True)
     password_hash = Column(String(255), nullable=False)
     role = Column(Enum(UserRole), nullable=False, default=UserRole.EMPLOYEE)
+    manager_name = Column(String(100), nullable=True)
     manager_id = Column(Integer, ForeignKey('Users.id'), nullable=True)
-    
+
     balances=relationship(
         "LeaveBalance", back_populates="user", cascade="all, delete-orphan")
     
@@ -25,7 +26,7 @@ class User(Base):
         "LeaveApplication", back_populates="user", cascade="all, delete-orphan")
     
     manager=relationship(
-        "User", remote_side=[id], back_populates="employees")
+        "User", remote_side=[id], back_populates="employees", foreign_keys=[manager_id])
     
     employees=relationship(
         "User", back_populates="manager")

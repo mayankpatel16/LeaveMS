@@ -20,10 +20,16 @@ def get_leave_type_service():
 # 1. GET /leave-types/
 @router.get("/", response_model=List[LeaveTypeResponse])
 def list_leave_types(
+    include_inactive: bool = False,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
     service: LeaveTypeService = Depends(get_leave_type_service)
 ):
+    if include_inactive:
+        if current_user.role != UserRole.HR:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="HR admin only")
+        return service.get_all(db)
+
     return service.get_all_active(db)
 
 
@@ -44,3 +50,20 @@ def create_leave_type(
         )
     
     return service.create_leave_type(db, data=data)
+
+@router.put("/{id}/active", response_model=LeaveTypeResponse)
+def update_leave_type_status(
+    id: int,
+    active: bool,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    service: LeaveTypeService = Depends(get_leave_type_service)
+):
+    if current_user.role != UserRole.HR:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="HR admin only")
+
+    leave_type = service.set_active(db, leave_type_id=id, active=active)
+    if not leave_type:
+        raise HTTPException(status_code=404, detail="Leave type not found")
+
+    return leave_type

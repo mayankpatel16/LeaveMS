@@ -9,7 +9,7 @@ class UserCreate(BaseModel):
     email: EmailStr
     password: str
     role: UserRole
-    manager_id: int | None = None
+    manager_name: str | None = None
     
     @field_validator('role', mode='before')
     @classmethod
@@ -20,12 +20,13 @@ class UserCreate(BaseModel):
             return mapping.get(value.lower(), value)
         return value
     
-class UserResponse(BaseModel):
+class UserResponse(BaseSchema):
     id: int
     username: str
     email: EmailStr
     role: UserRole
-    manager_id: int | None  
+    manager_name: str | None
+    manager_id: int | None = None
     
 class Login(BaseModel):
     email: EmailStr

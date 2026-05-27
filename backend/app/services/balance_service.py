@@ -7,10 +7,11 @@ class BalanceService:
         """
         Fetches all leave balances for a specific user for the current calendar year.
         """
-        return db.query(LeaveBalance).filter(
+        records = db.query(LeaveBalance).filter(
             LeaveBalance.employee_id == employee_id,
             LeaveBalance.current_year == date.today().year
         ).all()
+        return [self._with_display_names(record) for record in records]
 
     def adjust_balance(self, db: Session, user_id: int, leave_type_id: int, new_balance: int):
         """
@@ -39,4 +40,9 @@ class BalanceService:
         
         db.commit()
         db.refresh(record)
+        return self._with_display_names(record)
+
+    def _with_display_names(self, record: LeaveBalance):
+        record.employee_name = record.user.username if record.user else None
+        record.leave_type_name = record.leave_type.name if record.leave_type else None
         return record

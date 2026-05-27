@@ -8,9 +8,11 @@ class LeaveBalanceCreate(BaseModel):
     balance: int
     current_year: int
  
-class LeaveBalanceResponse(BaseModel):
+class LeaveBalanceResponse(BaseSchema):
     id: int
     employee_id: int
     leave_type_id: int
     balance: int
     current_year: int
+    employee_name: str | None = None
+    leave_type_name: str | None = None

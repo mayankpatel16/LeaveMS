@@ -45,13 +45,13 @@ class LeaveApplicationService:
             end_date=end_dt,
             reason=data.reason,
             working_days=days,
-            status=LeaveStatus.pending
+            status=LeaveStatus.PENDING
         )
         
         db.add(new_app)
         db.commit()
         db.refresh(new_app)
-        return new_app
+        return self.with_display_names(new_app)
 
     def process_approval(self, db: Session, application_id: int, manager_id: int, approved: bool, comment: str = None):
         # Fetch application
@@ -65,13 +65,13 @@ class LeaveApplicationService:
             raise HTTPException(status_code=403, detail="You are not authorized to manage this employee's leave")
 
         # Requirement: Ensure it hasn't been processed already
-        if app.status != LeaveStatus.pending:
+        if app.status != LeaveStatus.PENDING:
             raise HTTPException(status_code=400, detail="This application has already been processed")
 
         # DATABASE TRANSACTION
         try:
             if approved:
-                app.status = LeaveStatus.approved
+                app.status = LeaveStatus.APPROVED
                 # Deduct from the balance record
                 balance_rec = db.query(LeaveBalance).filter(
                     LeaveBalance.employee_id == app.employee_id,
@@ -81,14 +81,14 @@ class LeaveApplicationService:
                 if balance_rec:
                     balance_rec.balance -= app.working_days
             else:
-                app.status = LeaveStatus.rejected
+                app.status = LeaveStatus.REJECTED
             
             app.manager_comments = comment
             
             # Commit both the status change and the balance deduction together
             db.commit()
             db.refresh(app)
-            return app
+            return self.with_display_names(app)
             
         except Exception as e:
             db.rollback()
@@ -104,10 +104,15 @@ class LeaveApplicationService:
         if not app:
             raise HTTPException(status_code=404, detail="Application not found")
         
-        if app.status != LeaveStatus.pending:
+        if app.status != LeaveStatus.PENDING:
             raise HTTPException(status_code=400, detail="Cannot cancel a leave that is already processed")
 
-        app.status = LeaveStatus.cancelled
+        app.status = LeaveStatus.CANCELLED
         db.commit()
         db.refresh(app)
+        return self.with_display_names(app)
+
+    def with_display_names(self, app: LeaveApplication):
+        app.employee_name = app.user.username if app.user else None
+        app.leave_type_name = app.leave_type.name if app.leave_type else None
         return app

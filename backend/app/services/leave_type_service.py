@@ -17,3 +17,16 @@ class LeaveTypeService:
 
     def get_all_active(self, db: Session):
         return db.query(LeaveType).filter(LeaveType.active == True).all()
+
+    def get_all(self, db: Session):
+        return db.query(LeaveType).order_by(LeaveType.name).all()
+
+    def set_active(self, db: Session, leave_type_id: int, active: bool):
+        db_type = db.query(LeaveType).filter(LeaveType.id == leave_type_id).first()
+        if not db_type:
+            return None
+
+        db_type.active = active
+        db.commit()
+        db.refresh(db_type)
+        return db_type
