@@ -10,6 +10,17 @@ const initialForm = {
   reason: '',
 }
 
+const decodeToken = (token) => {
+  try {
+    const base64Url = token.split('.')[1]
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
+    const jsonPayload = decodeURIComponent(atob(base64).split('').map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''))
+    return JSON.parse(jsonPayload)
+  } catch (err) {
+    return null
+  }
+}
+
 const EmployeeDashboard = () => {
   const navigate = useNavigate()
   const [balances, setBalances] = useState([])
@@ -20,6 +31,7 @@ const EmployeeDashboard = () => {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+  const [isUnauthorized, setIsUnauthorized] = useState(false)
 
   const token = localStorage.getItem('token')
 
@@ -28,6 +40,12 @@ const EmployeeDashboard = () => {
       Authorization: `Bearer ${token}`,
     },
   }), [token])
+
+  const userRole = useMemo(() => {
+    if (!token) return null
+    const decoded = decodeToken(token)
+    return decoded?.role
+  }, [token])
 
   const leaveTypeById = useMemo(() => {
     return leaveTypes.reduce((acc, type) => {
@@ -71,12 +89,18 @@ const EmployeeDashboard = () => {
       return
     }
 
+    if (userRole !== 'Employee') {
+      setIsUnauthorized(true)
+      setIsLoading(false)
+      return
+    }
+
     const timerId = window.setTimeout(() => {
       loadDashboard()
     }, 0)
 
     return () => window.clearTimeout(timerId)
-  }, [loadDashboard, navigate, token])
+  }, [loadDashboard, navigate, token, userRole])
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -121,6 +145,26 @@ const EmployeeDashboard = () => {
   const handleLogout = () => {
     localStorage.removeItem('token')
     navigate('/login')
+  }
+
+  if (isUnauthorized) {
+    return (
+      <main className="min-h-screen bg-slate-50 px-4 py-8">
+        <div className="mx-auto max-w-6xl">
+          <div className="rounded-lg border border-red-200 bg-red-50 p-8 text-center shadow-sm">
+            <h2 className="text-2xl font-bold text-red-700">Access Denied</h2>
+            <p className="mt-2 text-red-600">This page is only accessible to employees. Please contact your administrator if you believe this is an error.</p>
+            <button
+              type="button"
+              onClick={() => navigate('/login')}
+              className="mt-4 inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"
+            >
+              Go to Login
+            </button>
+          </div>
+        </div>
+      </main>
+    )
   }
 
   if (isLoading) {
