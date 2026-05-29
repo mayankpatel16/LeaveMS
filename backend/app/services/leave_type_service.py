@@ -8,7 +8,8 @@ class LeaveTypeService:
         db_type = LeaveType(
             name=data.name,
             active=data.active,
-            DaysAllowed=data.DaysAllowed
+            DaysAllowed=data.DaysAllowed,
+            gender_allowed=data.gender_allowed
         )
         db.add(db_type)
         db.commit()
@@ -20,7 +21,21 @@ class LeaveTypeService:
 
     def get_all(self, db: Session):
         return db.query(LeaveType).order_by(LeaveType.name).all()
-
+    
+    def get_eligible_for_user(self, db: Session, gender: str):
+        """
+        Returns active leave types where:
+        - gender_allowed matches the user's gender OR
+        - gender_allowed is 'All' (available to everyone)
+        """
+        return db.query(LeaveType).filter(
+            LeaveType.active == True,
+            (
+                (LeaveType.gender_allowed == gender) |
+                (LeaveType.gender_allowed == 'All')
+            )
+        ).all()
+        
     def set_active(self, db: Session, leave_type_id: int, active: bool):
         db_type = db.query(LeaveType).filter(LeaveType.id == leave_type_id).first()
         if not db_type:

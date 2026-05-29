@@ -3,9 +3,9 @@ import { LogOut, Plus, RefreshCw, ShieldCheck } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import API from '../api/axios.js'
 
-const initialLeaveType = { name: '', DaysAllowed: 12, active: true }
+const initialLeaveType = { name: '', DaysAllowed: 12, active: true, gender_allowed: 'All' }
 const initialBalance = { user_id: '', leave_type_id: '', new_balance: '' }
-const initialUser = { username: '', email: '', password: '', role: 'Employee', manager_name: '' }
+const initialUser = { username: '', email: '', password: '', role: 'Employee', manager_name: '', gender: 'All' }
 
 const HrDashboard = () => {
   const navigate = useNavigate()
@@ -26,6 +26,19 @@ const HrDashboard = () => {
 
   const employees = useMemo(() => users.filter((user) => user.role === 'Employee'), [users])
   const managers = useMemo(() => users.filter((user) => user.role === 'Manager'), [users])
+
+  const selectedEmployee = useMemo(() => {
+    if (!balanceForm.user_id) return null
+    return employees.find(emp => String(emp.id) === String(balanceForm.user_id))
+  }, [balanceForm.user_id, employees])
+
+  const eligibleLeaveTypesForEmployee = useMemo(() => {
+    if (!selectedEmployee) return leaveTypes
+    return leaveTypes.filter(type => 
+      type.gender_allowed === 'All' || 
+      type.gender_allowed === selectedEmployee.gender
+    )
+  }, [selectedEmployee, leaveTypes])
 
   const loadDashboard = useCallback(async () => {
     setIsLoading(true)
@@ -72,6 +85,7 @@ const HrDashboard = () => {
       await API.post('/auth/register', {
         ...userForm,
         manager_name: userForm.role === 'Employee' ? userForm.manager_name || null : null,
+        gender: userForm.gender,
       }, authConfig)
       setUserForm(initialUser)
       setSuccess(`${userForm.role} account created`)
@@ -93,6 +107,7 @@ const HrDashboard = () => {
       await API.post('/leave-types/', {
         ...leaveTypeForm,
         DaysAllowed: Number(leaveTypeForm.DaysAllowed),
+        gender_allowed: leaveTypeForm.gender_allowed,
       }, authConfig)
       setLeaveTypeForm(initialLeaveType)
       setSuccess('Leave type created')
@@ -231,6 +246,20 @@ const HrDashboard = () => {
                     className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                   />
                 </div>
+
+                <div>
+                  <label htmlFor="user_gender" className="mb-1 block text-sm font-bold text-slate-700">Gender</label>
+                  <select
+                    id="user_gender"
+                    value={userForm.gender}
+                    onChange={(e) => setUserForm((current) => ({ ...current, gender: e.target.value }))}
+                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                  >
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                  </select>
+                </div>
+
                 <div>
                   <label htmlFor="user_role" className="mb-1 block text-sm font-bold text-slate-700">Role</label>
                   <select
@@ -295,7 +324,7 @@ const HrDashboard = () => {
                     className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                   >
                     <option value="">Select leave type</option>
-                    {leaveTypes.map((type) => <option key={type.id} value={type.id}>{type.name}</option>)}
+                    {eligibleLeaveTypesForEmployee.map((type) => <option key={type.id} value={type.id}>{type.name}</option>)}
                   </select>
                 </div>
                 <div>
@@ -329,6 +358,7 @@ const HrDashboard = () => {
                       <tr>
                         <th className="px-4 py-3 font-semibold">Name</th>
                         <th className="px-4 py-3 font-semibold">Email</th>
+                        <th className="px-4 py-3 font-semibold">Gender</th>
                         <th className="px-4 py-3 font-semibold">Role</th>
                         <th className="px-4 py-3 font-semibold">Manager</th>
                       </tr>
@@ -338,6 +368,7 @@ const HrDashboard = () => {
                         <tr key={user.id}>
                           <td className="px-4 py-3 font-semibold text-slate-800">{user.username}</td>
                           <td className="px-4 py-3 text-slate-600">{user.email}</td>
+                          <td className="px-4 py-3 text-slate-600">{user.gender}</td>
                           <td className="px-4 py-3 text-slate-600">{user.role}</td>
                           <td className="px-4 py-3 text-slate-600">{user.manager_name || '-'}</td>
                         </tr>
@@ -377,6 +408,21 @@ const HrDashboard = () => {
                     className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                   />
                 </div>
+
+                <div>
+                  <label htmlFor="gender_allowed" className="mb-1 block text-sm font-bold text-slate-700">Gender</label>
+                  <select
+                    id="gender_allowed"
+                    value={leaveTypeForm.gender_allowed}
+                    onChange={(e) => setLeaveTypeForm((current) => ({ ...current, gender_allowed: e.target.value }))}
+                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                  >
+                    <option value="All">All</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                  </select>
+                </div>
+
                 <label className="flex items-center gap-2 text-sm font-bold text-slate-700">
                   <input
                     type="checkbox"
@@ -398,27 +444,30 @@ const HrDashboard = () => {
               </div>
               <div className="p-5">
                 <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                {leaveTypes.map((type) => (
-                  <article key={type.id} className="rounded-lg border border-slate-200 p-4">
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <h3 className="font-bold text-slate-900">{type.name}</h3>
-                        <p className="text-sm text-slate-500">{type.DaysAllowed} days allowed</p>
+                  {leaveTypes.map((type) => (
+                    <article key={type.id} className="rounded-lg border border-slate-200 p-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <h3 className="font-bold text-slate-900">{type.name}</h3>
+                          <p className="text-sm text-slate-500">{type.DaysAllowed} days allowed</p>
+                          <p className="text-xs text-slate-400 mt-0.5">
+                            {type.gender_allowed ? `${type.gender_allowed}` : 'All genders'}
+                          </p>
+                        </div>
+                        <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${type.active ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-600'}`}>
+                          {type.active ? 'Active' : 'Inactive'}
+                        </span>
                       </div>
-                      <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${type.active ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-600'}`}>
-                        {type.active ? 'Active' : 'Inactive'}
-                      </span>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => handleToggleLeaveType(type)}
-                      className="mt-4 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50"
-                    >
-                      {type.active ? 'Deactivate' : 'Activate'}
-                    </button>
-                  </article>
-                ))}
-              </div>
+                      <button
+                        type="button"
+                        onClick={() => handleToggleLeaveType(type)}
+                        className="mt-4 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50"
+                      >
+                        {type.active ? 'Deactivate' : 'Activate'}
+                      </button>
+                    </article>
+                  ))}
+                </div>
               </div>
             </section>
 

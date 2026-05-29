@@ -13,6 +13,8 @@ from app.schemas.leave_application_schema import LeaveApplicationCreate, LeaveAp
 from app.models.user_model import User, UserRole
 from app.models.leave_application_model import LeaveApplication, LeaveStatus
 from app.services.leave_application_service import LeaveApplicationService
+from app.routes.leave_type_route import get_leave_type_service
+
 
 router = APIRouter(prefix="/applications", tags=["Leave Applications"])
 

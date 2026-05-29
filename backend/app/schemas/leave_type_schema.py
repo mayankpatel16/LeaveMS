@@ -7,9 +7,11 @@ class LeaveTypeCreate(BaseModel):
     name: str
     active: bool
     DaysAllowed: int
+    gender_allowed: str
     
 class LeaveTypeResponse(BaseSchema):
     id : int
     name: str 
     active: bool 
     DaysAllowed: int
+    gender_allowed: str 

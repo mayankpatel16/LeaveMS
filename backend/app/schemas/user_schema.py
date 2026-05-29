@@ -9,6 +9,7 @@ class UserCreate(BaseModel):
     email: EmailStr
     password: str
     role: UserRole
+    gender : str
     manager_name: str | None = None
     
     @field_validator('role', mode='before')
@@ -25,6 +26,7 @@ class UserResponse(BaseSchema):
     username: str
     email: EmailStr
     role: UserRole
+    gender : str
     manager_name: str | None
     manager_id: int | None = None
     

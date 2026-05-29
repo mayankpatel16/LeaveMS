@@ -16,6 +16,7 @@ class User(Base):
     email = Column(String(120), unique=True, nullable=False, index=True)
     password_hash = Column(String(255), nullable=False)
     role = Column(Enum(UserRole), nullable=False, default=UserRole.EMPLOYEE)
+    gender = Column(String(20), nullable=True)
     manager_name = Column(String(100), nullable=True)
     manager_id = Column(Integer, ForeignKey('Users.id'), nullable=True)
 

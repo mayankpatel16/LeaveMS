@@ -17,7 +17,7 @@ router = APIRouter(prefix="/leave-types", tags=["Leave Types"])
 def get_leave_type_service():
     return LeaveTypeService()
 
-# 1. GET /leave-types/
+# GET /leave-types/
 @router.get("/", response_model=List[LeaveTypeResponse])
 def list_leave_types(
     include_inactive: bool = False,
@@ -29,11 +29,14 @@ def list_leave_types(
         if current_user.role != UserRole.HR:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="HR admin only")
         return service.get_all(db)
+    
+    # Employees see only types matching their gender
+    if current_user.role == UserRole.EMPLOYEE:
+        return service.get_eligible_for_user(db, gender=current_user.gender)
 
     return service.get_all_active(db)
 
-
-# 2. POST /leave-types/
+#  POST /leave-types/
 @router.post("/", response_model=LeaveTypeResponse)
 def create_leave_type(
     data: LeaveTypeCreate,

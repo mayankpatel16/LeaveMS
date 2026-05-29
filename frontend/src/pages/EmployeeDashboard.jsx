@@ -32,6 +32,7 @@ const EmployeeDashboard = () => {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [isUnauthorized, setIsUnauthorized] = useState(false)
+  const [statusFilter, setStatusFilter] = useState('all')
 
   const token = localStorage.getItem('token')
 
@@ -61,6 +62,13 @@ const EmployeeDashboard = () => {
 
     return { totalBalance, pendingCount, approvedCount }
   }, [applications, balances])
+
+  const filteredApplications = useMemo(() => {
+    if (statusFilter === 'all') {
+      return applications
+    }
+    return applications.filter((app) => normalizeStatus(app.status) === statusFilter)
+  }, [applications, statusFilter])
 
   const loadDashboard = useCallback(async () => {
     setIsLoading(true)
@@ -223,7 +231,7 @@ const EmployeeDashboard = () => {
           <article className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-slate-500">Available Days</p>
+                <p className="text-sm font-medium text-slate-500">Leave Days</p>
                 <p className="mt-1 text-3xl font-bold text-slate-900">{stats.totalBalance}</p>
               </div>
               <div className="rounded-lg bg-blue-50 p-3 text-blue-600"><CalendarDays className="h-5 w-5" /></div>
@@ -249,7 +257,8 @@ const EmployeeDashboard = () => {
           </article>
         </section>
 
-        <section>
+        {/* No need to show the this section. */}
+        {/* <section>
           <h2 className="mb-3 text-xl font-bold text-slate-900">Leave Balances</h2>
           {balances.length > 0 ? (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -290,7 +299,7 @@ const EmployeeDashboard = () => {
               No leave balances found for your account.
             </div>
           )}
-        </section>
+        </section> */}
 
         <section className="grid gap-6 lg:grid-cols-[360px_1fr]">
           <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
@@ -368,15 +377,76 @@ const EmployeeDashboard = () => {
             </form>
           </div>
 
+          {/* filtering apllications by status to be added */}
           <div className="rounded-lg border border-slate-200 bg-white shadow-sm">
             <div className="border-b border-slate-200 p-5">
               <h2 className="text-xl font-bold text-slate-900">My Leave Applications</h2>
             </div>
 
-            {applications.length > 0 ? (
-              <div className="overflow-x-auto">
+            <div className="border-b border-slate-200 p-5">
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => setStatusFilter('all')}
+                  className={`rounded-lg px-4 py-2 text-sm font-bold transition ${
+                    statusFilter === 'all'
+                      ? 'bg-blue-600 text-white'
+                      : 'border border-slate-300 text-slate-700 hover:bg-slate-100'
+                  }`}
+                >
+                  All
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setStatusFilter('pending')}
+                  className={`rounded-lg px-4 py-2 text-sm font-bold transition ${
+                    statusFilter === 'pending'
+                      ? 'bg-yellow-600 text-white'
+                      : 'border border-slate-300 text-slate-700 hover:bg-slate-100'
+                  }`}
+                >
+                  Pending
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setStatusFilter('approved')}
+                  className={`rounded-lg px-4 py-2 text-sm font-bold transition ${
+                    statusFilter === 'approved'
+                      ? 'bg-green-600 text-white'
+                      : 'border border-slate-300 text-slate-700 hover:bg-slate-100'
+                  }`}
+                >
+                  Approved
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setStatusFilter('rejected')}
+                  className={`rounded-lg px-4 py-2 text-sm font-bold transition ${
+                    statusFilter === 'rejected'
+                      ? 'bg-red-600 text-white'
+                      : 'border border-slate-300 text-slate-700 hover:bg-slate-100'
+                  }`}
+                >
+                  Rejected
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setStatusFilter('cancelled')}
+                  className={`rounded-lg px-4 py-2 text-sm font-bold transition ${
+                    statusFilter === 'cancelled'
+                      ? 'bg-slate-600 text-white'
+                      : 'border border-slate-300 text-slate-700 hover:bg-slate-100'
+                  }`}
+                >
+                  Cancelled
+                </button>
+              </div>
+            </div>
+
+            {filteredApplications.length > 0 ? (
+              <div className="overflow-x-auto overflow-y-auto max-h-96">
                 <table className="w-full min-w-720px text-left">
-                  <thead className="bg-slate-50 text-sm text-slate-600">
+                  <thead className="bg-slate-50 text-slate-600 sticky top-0 z-10">
                     <tr>
                       <th className="px-5 py-3 font-semibold">Leave Type</th>
                       <th className="px-5 py-3 font-semibold">Dates</th>
@@ -388,7 +458,7 @@ const EmployeeDashboard = () => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 text-sm">
-                    {applications.map((application) => {
+                    {filteredApplications.map((application) => {
                       const status = normalizeStatus(application.status)
                       const canCancel = status === 'pending'
 
@@ -429,7 +499,7 @@ const EmployeeDashboard = () => {
             ) : (
               <div className="p-8">
                 <div className="rounded-lg border border-dashed border-slate-300 bg-white p-8 text-center text-sm font-medium text-slate-500">
-                  You have not applied for leave yet.
+                  No applications found for the selected status.
                 </div>
               </div>
             )}

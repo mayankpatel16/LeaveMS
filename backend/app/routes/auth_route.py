@@ -36,6 +36,7 @@ def register_user(
         email=user_data.email,
         password_hash=hashed_pwd,
         role=user_data.role,
+        gender=user_data.gender,
         manager_name=user_data.manager_name,
         manager_id=manager.id if manager else None
     )

@@ -9,6 +9,7 @@ class LeaveType(Base):
     name = Column(String(50), unique=True, nullable=False)
     active = Column(Boolean, default=True)
     DaysAllowed = Column(Integer, nullable=False)
+    gender_allowed = Column(String(20), nullable=True)
     
     applications=relationship(
         "LeaveApplication", back_populates="leave_type", cascade="all, delete-orphan")
