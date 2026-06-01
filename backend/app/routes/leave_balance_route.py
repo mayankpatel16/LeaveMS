@@ -20,7 +20,21 @@ def get_my_balances(
     balance_service = BalanceService()
     return balance_service.get_user_balances(db, employee_id=current_user.id)
 
-# 2. PUT /balances/{user_id}
+# 2. GET /balances/user/{user_id}  (HR only – fetch any employee's balances)
+@router.get("/user/{user_id}", response_model=List[LeaveBalanceResponse])
+def get_user_balances_for_hr(
+    user_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """HR: view all current-year balances for a specific employee"""
+    if current_user.role != UserRole.HR:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="HR admin only")
+
+    balance_service = BalanceService()
+    return balance_service.get_balances_for_user(db, user_id=user_id)
+
+# 3. PUT /balances/{user_id}
 @router.put("/{user_id}", response_model=LeaveBalanceResponse)
 def adjust_employee_balance(
     user_id: int,
@@ -37,4 +51,4 @@ def adjust_employee_balance(
     balance_service = BalanceService()
     return balance_service.adjust_balance(
         db, user_id=user_id, leave_type_id=leave_type_id, new_balance=new_balance
-    )
+    )

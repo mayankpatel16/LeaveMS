@@ -8,7 +8,7 @@ from app.utils.auth_utils import get_current_user
 
 # Import Models and Enums
 from app.models.user_model import User, UserRole
-from app.schemas.leave_type_schema import LeaveTypeCreate, LeaveTypeResponse
+from app.schemas.leave_type_schema import LeaveTypeCreate, LeaveTypeUpdate, LeaveTypeResponse
 from app.services.leave_type_service import LeaveTypeService
 
 router = APIRouter(prefix="/leave-types", tags=["Leave Types"])
@@ -66,6 +66,27 @@ def update_leave_type_status(
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="HR admin only")
 
     leave_type = service.set_active(db, leave_type_id=id, active=active)
+    if not leave_type:
+        raise HTTPException(status_code=404, detail="Leave type not found")
+
+    return leave_type
+
+# PUT /leave-types/{id}
+@router.put("/{id}", response_model=LeaveTypeResponse)
+def update_leave_type(
+    id: int,
+    data: LeaveTypeUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    service: LeaveTypeService = Depends(get_leave_type_service)
+):
+    if current_user.role != UserRole.HR:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied: Only HR users can update leave types"
+        )
+
+    leave_type = service.update_leave_type(db, leave_type_id=id, data=data)
     if not leave_type:
         raise HTTPException(status_code=404, detail="Leave type not found")
 

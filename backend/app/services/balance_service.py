@@ -13,6 +13,16 @@ class BalanceService:
         ).all()
         return [self._with_display_names(record) for record in records]
 
+    def get_balances_for_user(self, db: Session, user_id: int):
+        """
+        HR endpoint: fetch all leave balances for a given employee (current year).
+        """
+        records = db.query(LeaveBalance).filter(
+            LeaveBalance.employee_id == user_id,
+            LeaveBalance.current_year == date.today().year
+        ).all()
+        return [self._with_display_names(record) for record in records]
+
     def adjust_balance(self, db: Session, user_id: int, leave_type_id: int, new_balance: int):
         """
         Updates an existing balance or creates a new record if it doesn't exist.
@@ -37,7 +47,7 @@ class BalanceService:
                 current_year=date.today().year
             )
             db.add(record)
-        
+
         db.commit()
         db.refresh(record)
         return self._with_display_names(record)

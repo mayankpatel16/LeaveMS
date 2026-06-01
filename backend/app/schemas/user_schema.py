@@ -20,7 +20,25 @@ class UserCreate(BaseModel):
             mapping = {"manager": "Manager", "employee": "Employee", "hr": "HR"}
             return mapping.get(value.lower(), value)
         return value
-    
+
+class UserUpdate(BaseModel):
+    username: str | None = None
+    email: EmailStr | None = None
+    password: str | None = None
+    role: UserRole | None = None
+    gender: str | None = None
+    manager_name: str | None = None
+
+    @field_validator('role', mode='before')
+    @classmethod
+    def validate_role(cls, value):
+        if value is None:
+            return value
+        if isinstance(value, str):
+            mapping = {"manager": "Manager", "employee": "Employee", "hr": "HR"}
+            return mapping.get(value.lower(), value)
+        return value
+
 class UserResponse(BaseSchema):
     id: int
     username: str
