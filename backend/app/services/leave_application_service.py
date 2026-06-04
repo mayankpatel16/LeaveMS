@@ -53,46 +53,46 @@ class LeaveApplicationService:
         db.refresh(new_app)
         return self.with_display_names(new_app)
 
-    # def process_approval(self, db: Session, application_id: int, manager_id: int, approved: bool, comment: str = None):
-    #     # Fetch application
-    #     app = db.query(LeaveApplication).filter(LeaveApplication.id == application_id).first()
-    #     if not app:
-    #         raise HTTPException(status_code=404, detail="Application not found")
+    def process_approval(self, db: Session, application_id: int, manager_id: int, approved: bool, comment: str = None):
+        # Fetch application
+        app = db.query(LeaveApplication).filter(LeaveApplication.id == application_id).first()
+        if not app:
+            raise HTTPException(status_code=404, detail="Application not found")
         
-    #     # Requirement: Manager verification
-    #     employee = db.query(User).filter(User.id == app.employee_id).first()
-    #     if employee.manager_id != manager_id:
-    #         raise HTTPException(status_code=403, detail="You are not authorized to manage this employee's leave")
+        # Requirement: Manager verification
+        employee = db.query(User).filter(User.id == app.employee_id).first()
+        if employee.manager_id != manager_id:
+            raise HTTPException(status_code=403, detail="You are not authorized to manage this employee's leave")
 
-    #     # Requirement: Ensure it hasn't been processed already
-    #     if app.status != LeaveStatus.PENDING:
-    #         raise HTTPException(status_code=400, detail="This application has already been processed")
+        # Requirement: Ensure it hasn't been processed already
+        if app.status != LeaveStatus.PENDING:
+            raise HTTPException(status_code=400, detail="This application has already been processed")
 
-    #     # DATABASE TRANSACTION
-    #     try:
-    #         if approved:
-    #             app.status = LeaveStatus.APPROVED
-    #             # Deduct from the balance record
-    #             balance_rec = db.query(LeaveBalance).filter(
-    #                 LeaveBalance.employee_id == app.employee_id,
-    #                 LeaveBalance.leave_type_id == app.leave_type_id
-    #             ).first()
+        # DATABASE TRANSACTION
+        try:
+            if approved:
+                app.status = LeaveStatus.APPROVED
+                # Deduct from the balance record
+                balance_rec = db.query(LeaveBalance).filter(
+                    LeaveBalance.employee_id == app.employee_id,
+                    LeaveBalance.leave_type_id == app.leave_type_id
+                ).first()
                 
-    #             if balance_rec:
-    #                 balance_rec.balance -= app.working_days
-    #         else:
-    #             app.status = LeaveStatus.REJECTED
+                if balance_rec:
+                    balance_rec.balance -= app.working_days
+            else:
+                app.status = LeaveStatus.REJECTED
             
-    #         app.manager_comments = comment
+            app.manager_comments = comment
             
-    #         # Commit both the status change and the balance deduction together
-    #         db.commit()
-    #         db.refresh(app)
-    #         return self.with_display_names(app)
+            # Commit both the status change and the balance deduction together
+            db.commit()
+            db.refresh(app)
+            return self.with_display_names(app)
             
-    #     except Exception as e:
-    #         db.rollback()
-    #         raise HTTPException(status_code=500, detail="An error occurred during the transaction")
+        except Exception as e:
+            db.rollback()
+            raise HTTPException(status_code=500, detail="An error occurred during the transaction")
 
     def cancel_application(self, db: Session, application_id: int, employee_id: int):
 
