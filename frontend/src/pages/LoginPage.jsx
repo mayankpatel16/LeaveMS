@@ -9,21 +9,21 @@ const LoginPage = () => {
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    setIsLoading(true)
-    setError('')
-    try {
-      const response = await API.post('/auth/login', { email, password })
-      localStorage.setItem('token', response.data.access_token)
-      navigate(getDashboardPath(response.data.access_token))
-    } catch (err) {
-      console.error('Login error:', err)
-      setError(err.response?.data?.detail || 'Invalid email or password')
-    } finally {
-      setIsLoading(false)
-    }
-  }
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault()
+  //   setIsLoading(true)
+  //   setError('')
+  //   try {
+  //     const response = await API.post('/auth/login', { email, password })
+  //     localStorage.setItem('token', response.data.access_token)
+  //     navigate(getDashboardPath(response.data.access_token))
+  //   } catch (err) {
+  //     console.error('Login error:', err)
+  //     setError(err.response?.data?.detail || 'Invalid email or password')
+  //   } finally {
+  //     setIsLoading(false)
+  //   }
+  // }
 
   return (
     <div className="min-h-screen grid lg:grid-cols-2 bg-neutral-950">
